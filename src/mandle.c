@@ -10,9 +10,15 @@ double cI;
 double temp;
 float currIterates;
 
-
 int i; 
 int j;
+
+unsigned char *arr;
+
+char* screenBuffer;
+char* row;
+int buffWidth = -1;
+int buffHeight = -1;
 
 struct zoomSettings{
     int width;
@@ -23,7 +29,8 @@ struct zoomSettings{
     double iCenter;
 };
 
-struct zoomSettings settings = {100,100,255.0,0.1,-0.75,0.1};
+struct zoomSettings settings = {100,100,255.0,0.1,
+-0.235125,0.827215};
 char gradient[6][4] = {
     " ",
     ".",
@@ -32,7 +39,14 @@ char gradient[6][4] = {
     "▓",
     "█"
     }; 
-int gradientLen = 4; //final elem id of ^
+const int gradientLen = 4; //final elem id of ^
+
+const char* trC = "╗"; //top right corner ect
+const char* tlC = "╔";
+const char* brC = "╚";
+const char* blC = "╝";
+const char* horiz = "═";
+const char* vert = "║";
 
 char *numToStr(unsigned char c){
     return ((c == (unsigned char)255)?
@@ -55,27 +69,46 @@ unsigned char getDivergeAt(double r,double i){
     return (char)(255.0 * (currIterates/settings.iterates));
 }
 
+int bufferResized(){
+    return((settings.height != buffHeight) || (settings.width != buffWidth));
+}
+
+void initBuffers(int width, int height) {
+    if(screenBuffer) free(screenBuffer);
+    if(row) free(row);
+
+    screenBuffer = malloc(((width *4) + 1) * height * sizeof(char));
+    row = malloc((settings.width *4) + 1 * sizeof(char)); //*3 as extended ascii may take up that much space
+    buffWidth = width;
+    buffHeight = height;
+}
+
 void displayArr(unsigned char* arr){
-    char row[(settings.width *4) + 1]; //*3 as extended ascii may take up that much space
+    if(bufferResized()) initBuffers(settings.width,settings.height);
+    
+    screenBuffer[0] = '\0';
     for(j=0; j < settings.height; j++){
         row[0] = '\0';
         for(i=0; i < settings.width; i++){
             strcat(row, numToStr(*(arr + i + (j*settings.width))));
         }
-        printf("%s\n",row);
+        strcat(row,"\n");
+        strcat(screenBuffer,row);
     }
+    printf("\n\n\n%s",screenBuffer);
 }
 
 char getInput(){
-    char input[4];
-    fgets(input,1,stdin);
-    switch (input[0]){
-
+    char input = getchar();
+    switch (input){
+    case '\n':
+        settings.scale *= 0.9;
+        break;
     case ']':
-        settings.scale *= 1.1;
+        settings.scale *= 0.9;
         break;
     case '[':
-        settings.scale *= 0.9;
+        settings.scale *= 1.1;
         break;
     default:
         return 0;
@@ -105,6 +138,12 @@ void displaySettings(){
         settings.scale);
 }
 
+void freeMem(){
+    if(arr) free(arr);
+    if(row) free(row);
+    if(screenBuffer) free(screenBuffer);
+}
+
 int main(int argc, char **argv){
     if(argc < 2){
         printf("no width arg\n");
@@ -130,7 +169,7 @@ int main(int argc, char **argv){
     if(argc >= 7){
         settings.iterates = (float)atoi(argv[6]);
     }
-    unsigned char *arr = (unsigned char *)malloc(settings.width * settings.height * sizeof(unsigned char));
+    arr = (unsigned char *)malloc(settings.width * settings.height * sizeof(unsigned char));
     
     if(!arr){
         printf("memory allocation failed\n");
@@ -145,6 +184,6 @@ int main(int argc, char **argv){
         displayArr(arr);
    }
    
-    free(arr);
+    freeMem();
 	return 0;
 }
