@@ -10,7 +10,11 @@ compile-c:
 
 run-c:
 	gcc src/mandle.c -o out/mandle
-	./out/mandle 10 10
+	./out/mandle 170 54 -f
+
+run-c-full:
+	gcc src/mandle.c -o out/mandle
+	./out/mandle 630 162 -f
 
 compile-timer:
 	gcc src/timer.c -o out/timer
@@ -23,12 +27,9 @@ test:
 	gcc src/test.c -o out/test
 	./out/timer -c ./out/test
 
-
-
 benchmark:
 	make compile-timer
 	make compile-c
 	make compile-java
 	./out/timer -c ./out/mandle
 	./out/timer -c java -cp ./out Mandle
-
